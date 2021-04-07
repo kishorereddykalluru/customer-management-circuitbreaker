@@ -14,5 +14,5 @@ public class ApiErrors implements Serializable {
     private static final long serialVersionUID = -7113667471401129817L;
 
     @NonNull
-    private List<ApiError> errors;
+    private List<ApiError> apiErrors;
 }
