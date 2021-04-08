@@ -48,16 +48,16 @@ public class CustomerErrorDecoder implements ErrorDecoder{
             if(response.status() >= 400 && response.status() <= 599){
                 if(response.status() == HttpStatus.BAD_REQUEST.value()){
                     log.debug("Bad Request, {}", response.status());
-                    return new BadRequestException(processErrorMessage(customerErrors.getErrors()));
+                    return new BadRequestException(processErrorMessage(customerErrors.getApiErrors()));
                 } else if(response.status() == HttpStatus.NOT_ACCEPTABLE.value()){
                     log.debug("Invalid Accept header, {}", response.status());
                     return new NotAcceptableHeaderException("Not a matched accept header for Customer service");
                 } else if (response.status() == HttpStatus.NOT_FOUND.value()){
                     log.debug("Not found, {}",response.status());
-                    return new NotFoundException(processErrorMessage(customerErrors.getErrors()));
+                    return new NotFoundException(processErrorMessage(customerErrors.getApiErrors()));
                 } else if(response.status() >= HttpStatus.INTERNAL_SERVER_ERROR.value()){
                     log.debug("Internal error, {}",response.status());
-                    return new CustomerInternalException(processErrorMessage(customerErrors.getErrors()));
+                    return new CustomerInternalException(processErrorMessage(customerErrors.getApiErrors()));
                 }
             }
         }
@@ -74,7 +74,7 @@ public class CustomerErrorDecoder implements ErrorDecoder{
             log.trace("Customer error response body: {}",apiError.toString());
         } catch (IOException e) {
             log.debug("Customer response body exception. {}", ExceptionUtils.getRootCauseMessage(e));
-            apiError.setErrors(List.of(ApiError.builder().message("Failed to call customer service due to "+response.status()).code(500).build()));
+            apiError.setApiErrors(List.of(ApiError.builder().message("Failed to call customer service due to "+response.status()).code(500).build()));
         }
         return apiError;
     }
