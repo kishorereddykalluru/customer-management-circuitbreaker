@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.RequestDispatcher;
@@ -29,6 +30,11 @@ public class CustomerCircuitBreakerController implements ErrorController {
     @GetMapping("/customer/getAll")
     public List<CustomerDetails> getCustomerDetails(){
        return customerService.getAllCustomers();
+    }
+
+    @GetMapping("/customer/{id}")
+    public CustomerDetails getCustomerById(@PathVariable("id") Long id){
+        return customerService.getCustomerById(id);
     }
 
     @GetMapping(value = ERROR_URL)

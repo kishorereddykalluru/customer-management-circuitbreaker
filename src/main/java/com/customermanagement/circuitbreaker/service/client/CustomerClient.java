@@ -2,6 +2,7 @@ package com.customermanagement.circuitbreaker.service.client;
 
 import com.customermanagement.circuitbreaker.domain.CustomerDetails;
 import com.customermanagement.circuitbreaker.exception.CustomerInternalException;
+import com.customermanagement.circuitbreaker.interceptors.RequestInterceptor;
 import com.customermanagement.circuitbreaker.service.feign.CustomerFeign;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.IllegalStateTransitionException;
@@ -40,5 +41,21 @@ public class CustomerClient {
             throw new CustomerInternalException(ExceptionUtils.getRootCauseMessage(e));
         }
         return CompletableFuture.completedFuture(customerDetails);
+    }
+
+    public CompletableFuture<CustomerDetails> getCustomerById(String xCorrelationId, Long id){
+
+        CustomerDetails customerDetail = null;
+        try{
+            Map<String, String> clientHeaders = new HashMap<>();
+            clientHeaders.put(HttpHeaders.ACCEPT, acceptHeader);
+            clientHeaders.put(RequestInterceptor.HEADER_X_CORRELATION_ID, xCorrelationId);
+            log.info("get customer by id");
+            customerDetail = customerFeign.findByCustomerId(clientHeaders, id);
+        } catch (CallNotPermittedException | IllegalStateTransitionException e){
+            log.error("Customer Service call failed with: {}", ExceptionUtils.getRootCauseMessage(e));
+            throw new CustomerInternalException(ExceptionUtils.getRootCauseMessage(e));
+        }
+        return CompletableFuture.completedFuture(customerDetail);
     }
 }

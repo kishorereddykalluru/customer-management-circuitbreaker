@@ -12,6 +12,8 @@ server:
 customer-feign:
   getAllCustomers:
     url: /customers/getAll
+  getCustomerById:
+    url: /customers/{id}
   health:
     url: /actuator/health
 

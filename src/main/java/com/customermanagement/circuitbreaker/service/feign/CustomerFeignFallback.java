@@ -32,6 +32,13 @@ public class CustomerFeignFallback implements CustomerFeign{
     }
 
     @Override
+    public CustomerDetails findByCustomerId(Map<String, String> headers, Long id) {
+        log.debug("::::: In Customer Fall back service");
+        log.error(ExceptionUtils.getRootCauseMessage(exception));
+        throw new CustomerInternalException(ExceptionUtils.getRootCauseMessage(exception));
+    }
+
+    @Override
     public Response healthCheck() {
         return Response.builder()
                 .request(Request.create(Request.HttpMethod.GET, "/healthcheck", new HashMap<>(), Request.Body.empty(), null))

@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@ControllerAdvice
 public class CustomerExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Resource(name = "messageSource")
@@ -124,11 +123,11 @@ public class CustomerExceptionHandler extends ResponseEntityExceptionHandler {
         return super.handleExceptionInternal(ex,body, headers, status, request);
     }
 
-    private ResponseEntity<Object> handleAllExceptions(Exception e, HttpStatus status, WebRequest request, List<ApiError> apiErrors) {
+    protected ResponseEntity<Object> handleAllExceptions(Exception e, HttpStatus status, WebRequest request, List<ApiError> apiErrors) {
         return handleExceptionInternal(e, ApiErrors.builder().apiErrors(apiErrors).build(), new HttpHeaders(), status, request);
     }
 
-    private ResponseEntity<Object> handleAllExceptions(Exception e, HttpStatus status, WebRequest request, ApiError apiError) {
+    protected ResponseEntity<Object> handleAllExceptions(Exception e, HttpStatus status, WebRequest request, ApiError apiError) {
         return handleAllExceptions(e, status, request, List.of(apiError));
     }
 
@@ -136,7 +135,7 @@ public class CustomerExceptionHandler extends ResponseEntityExceptionHandler {
         return resolveMessageSource(String.valueOf(prop), args);
     }
 
-    private String resolveMessageSource(String prop, String... args) {
+    protected String resolveMessageSource(String prop, String... args) {
         return messageSource.getMessage(prop, args, LocaleContextHolder.getLocale());
     }
 

@@ -1,5 +1,6 @@
 package com.customermanagement.circuitbreaker.config;
 
+import com.customermanagement.circuitbreaker.interceptors.RequestInterceptor;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -24,11 +26,12 @@ public class MockCustomerService {
     @Value("${customer-feign.base.url}")
     private String baseUrl;
 
-    @Value("${customer-feign.getAllCustomers.url}")
+    @Value("${customer-feign.getCustomerById.url}")
     private String basePath;
 
     private WireMockServer wireMockServer;
 
+    @PostConstruct
     public void init() throws MalformedURLException{
         configureMockServer();
         simulate();
@@ -37,14 +40,16 @@ public class MockCustomerService {
 
 
     private void simulate() {
-        simulateScenario(HttpStatus.SC_OK, expectedResponse());
+        simulateScenario(1L , HttpStatus.SC_OK, expectedResponse());
     }
 
-    private void simulateScenario(int httpStatus, String response){
+    private void simulateScenario(Long id, int httpStatus, String response){
+        basePath = basePath + id;
         WireMock.stubFor(WireMock
                 .get(WireMock.urlPathEqualTo(basePath))
                 .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
-                //.withHeader(RequestInterceptor.HEADER_X_CORRELATION_ID, WireMock.matching(".*"))
+                //.withQueryParam("id", WireMock.equalTo(id))
+                .withHeader(RequestInterceptor.HEADER_X_CORRELATION_ID, WireMock.matching(".*"))
 
                 .willReturn(WireMock.aResponse()
                 .withStatus(httpStatus)
@@ -57,6 +62,8 @@ public class MockCustomerService {
         wireMockServer = new WireMockServer(url.getPort());
         wireMockServer.start();
         WireMock.configureFor(url.getHost(), wireMockServer.port());
+
+        basePath = basePath.replace("{id}", "");
     }
 
     @PreDestroy
@@ -67,6 +74,6 @@ public class MockCustomerService {
     }
 
     private String expectedResponse() {
-        return "";
+        return "{\"id\": 1,\"customerName\": \"Alfreds Futterkiste\",\"contactName\": \"Maria Anders\", \"city\": \"Berlin\", \"country\": \"Germany\" }";
     }
 }
