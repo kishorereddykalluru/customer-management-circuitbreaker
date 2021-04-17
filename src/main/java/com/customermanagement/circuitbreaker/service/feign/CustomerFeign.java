@@ -20,12 +20,10 @@ public interface CustomerFeign {
 
     @CircuitBreaker(name = SERVICE)
     @GetMapping(value = "${customer-feign.getAllCustomers.url}")
-    @CachePut(value = "customer-cb-cache", keyGenerator = "customerKeyGenerator")
     List<CustomerDetails> getAllCustomers();
 
     @CircuitBreaker(name = SERVICE)
     @GetMapping(value = "${customer-feign.getCustomerById.url}")
-    @CachePut(value = "customer-cb-cache-by-id", keyGenerator = "customerKeyGenerator")
     CustomerDetails findByCustomerId(@RequestHeader Map<String, String> headers,
                                      @PathVariable("id") Long id);
 

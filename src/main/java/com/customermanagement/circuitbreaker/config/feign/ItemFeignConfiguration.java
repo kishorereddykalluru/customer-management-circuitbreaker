@@ -1,7 +1,7 @@
 package com.customermanagement.circuitbreaker.config.feign;
 
-import com.customermanagement.circuitbreaker.service.feign.CustomerFeign;
-import com.customermanagement.circuitbreaker.service.feign.CustomerFeignFallback;
+import com.customermanagement.circuitbreaker.service.feign.ItemFeign;
+import com.customermanagement.circuitbreaker.service.feign.ItemFeignFallback;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.ExceptionPropagationPolicy;
 import feign.Feign;
@@ -13,21 +13,14 @@ import io.github.resilience4j.feign.FeignDecorator;
 import io.github.resilience4j.feign.FeignDecorators;
 import io.github.resilience4j.feign.Resilience4jFeign;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * Customer Service Feign Configuration
- */
 @Slf4j
-public class CustomerFeignConfiguration {
-    private final ObjectMapper objectMapper = new ObjectMapper();
+public class ItemFeignConfiguration {
 
     @Value("${customer-feign.retry.status.codes:500,502,503}")
     private int[] retryStatusCodes;
@@ -41,32 +34,29 @@ public class CustomerFeignConfiguration {
     @Value("${customer-feign.retry.maxAttempts:5}")
     private int maxAttempts;
 
-    @Autowired
-    private CacheManager cacheManager;
-
     @Bean
     @Scope("prototype")
-    public Feign.Builder customerFeignBuilder(CircuitBreakerRegistry circuitBreakerRegistry){
-        return Resilience4jFeign.builder(customerCircuitBreakerConfig(circuitBreakerRegistry))
-                .errorDecoder(new CustomerErrorDecoder(retryStatusCodes, objectMapper))
+    public Feign.Builder itemFeignBuilder(CircuitBreakerRegistry circuitBreakerRegistry, ObjectMapper objectMapper, Retryer itemFeignRetryer){
+        return Resilience4jFeign.builder(itemCircuitBreakerConfig(circuitBreakerRegistry))
+                .errorDecoder(new ItemErrorDecoder(retryStatusCodes, objectMapper))
                 .exceptionPropagationPolicy(ExceptionPropagationPolicy.UNWRAP)
-                .retryer(customerFeignRetryer());
+                .retryer(itemFeignRetryer);
     }
 
     @Bean
-    public Retryer customerFeignRetryer() {
+    public Retryer itemFeignRetryer() {
         return new Retryer.Default(periodMillis, TimeUnit.SECONDS.toMillis(maxPeriodSec), maxAttempts);
     }
 
-    private FeignDecorator customerCircuitBreakerConfig(CircuitBreakerRegistry circuitBreakerRegistry) {
-        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(CustomerFeign.SERVICE);
+    private FeignDecorator itemCircuitBreakerConfig(CircuitBreakerRegistry circuitBreakerRegistry) {
+        CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(ItemFeign.SERVICE);
         circuitBreaker.getEventPublisher()
                 .onStateTransition(event -> log.info("Circuit breaker state: " + event.getStateTransition().toString()))
                 .onEvent(event -> log.trace("Circuit breaker event: " + event.getEventType().toString()));
 
         return FeignDecorators.builder()
                 .withCircuitBreaker(circuitBreaker)
-                .withFallbackFactory(exception -> new CustomerFeignFallback(exception, cacheManager), FeignException.class)
+                .withFallbackFactory(ItemFeignFallback::new, FeignException.class)
                 .build();
 
     }

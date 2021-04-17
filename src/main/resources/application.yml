@@ -6,6 +6,10 @@ spring:
   jmx:
     enabled: true
 
+logging:
+  level:
+    com.customermanagement.circuitbreaker: trace
+
 server:
   port: 9091
 
@@ -16,6 +20,8 @@ customer-feign:
     url: /customers/{id}
   health:
     url: /actuator/health
+  item:
+    url: /item
 
 feign:
   client:
@@ -32,4 +38,14 @@ resilience4j:
         ignore-exceptions: feign.RetryableException,com.customermanagement.circuitbreaker.exception.BadRequestException,com.customermanagement.circuitbreaker.exception.CustomerInternalException,com.customermanagement.circuitbreaker.exception.NotAcceptableHeaderException,com.customermanagement.circuitbreaker.exception.NotFoundException
         minimum-number-of-calls: 5
         register-health-indicator: true
+      orderService:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        waitDurationInOpenState: 5s
+        slidingWindowType: COUNT_BASED
 
