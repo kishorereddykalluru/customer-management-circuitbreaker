@@ -66,7 +66,7 @@ public class CustomerErrorDecoder implements ErrorDecoder{
 
 
 
-    private ApiErrors deserializeClientResponse(Response response) {
+    protected ApiErrors deserializeClientResponse(Response response) {
         ApiErrors apiError = new ApiErrors(new ArrayList<>());
 
         try {
@@ -79,7 +79,7 @@ public class CustomerErrorDecoder implements ErrorDecoder{
         return apiError;
     }
 
-    private String processErrorMessage(List<ApiError> errors) {
+    protected String processErrorMessage(List<ApiError> errors) {
         return errors.stream().map(ApiError::getMessage).collect(Collectors.joining("&"));
     }
 }

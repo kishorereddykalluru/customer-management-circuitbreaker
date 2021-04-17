@@ -2,11 +2,14 @@ package com.customermanagement.circuitbreaker.service.feign;
 
 import com.customermanagement.circuitbreaker.domain.CustomerDetails;
 import com.customermanagement.circuitbreaker.exception.CustomerInternalException;
+import com.customermanagement.circuitbreaker.util.CustomerHelper;
 import feign.Request;
 import feign.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.boot.actuate.health.Status;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,13 +18,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 public class CustomerFeignFallback implements CustomerFeign{
 
     private final Exception exception;
-    public CustomerFeignFallback(Exception exception) {
+    private final CacheManager cacheManager;
+
+    public CustomerFeignFallback(Exception exception, CacheManager cacheManager) {
         this.exception = exception;
+        this.cacheManager = cacheManager;
     }
 
     @Override
@@ -34,8 +41,13 @@ public class CustomerFeignFallback implements CustomerFeign{
     @Override
     public CustomerDetails findByCustomerId(Map<String, String> headers, Long id) {
         log.debug("::::: In Customer Fall back service");
-        log.error(ExceptionUtils.getRootCauseMessage(exception));
-        throw new CustomerInternalException(ExceptionUtils.getRootCauseMessage(exception));
+        Cache.ValueWrapper valueWrapper = CustomerHelper.getCacheValue(cacheManager, "customer-cb-cache-by-id", id);
+        if(Objects.nonNull(valueWrapper)){
+            return (CustomerDetails) valueWrapper.get();
+        } else {
+            log.error(ExceptionUtils.getRootCauseMessage(exception));
+            throw new CustomerInternalException(ExceptionUtils.getRootCauseMessage(exception));
+        }
     }
 
     @Override

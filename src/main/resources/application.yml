@@ -30,6 +30,6 @@ resilience4j:
     instances:
       customer-management:
         ignore-exceptions: feign.RetryableException,com.customermanagement.circuitbreaker.exception.BadRequestException,com.customermanagement.circuitbreaker.exception.CustomerInternalException,com.customermanagement.circuitbreaker.exception.NotAcceptableHeaderException,com.customermanagement.circuitbreaker.exception.NotFoundException
-        minimum-number-of-calls: 50
+        minimum-number-of-calls: 5
         register-health-indicator: true
 

@@ -4,6 +4,7 @@ import com.customermanagement.circuitbreaker.config.feign.CustomerFeignConfigura
 import com.customermanagement.circuitbreaker.domain.CustomerDetails;
 import feign.Response;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,10 +20,12 @@ public interface CustomerFeign {
 
     @CircuitBreaker(name = SERVICE)
     @GetMapping(value = "${customer-feign.getAllCustomers.url}")
+    @CachePut(value = "customer-cb-cache", keyGenerator = "customerKeyGenerator")
     List<CustomerDetails> getAllCustomers();
 
     @CircuitBreaker(name = SERVICE)
     @GetMapping(value = "${customer-feign.getCustomerById.url}")
+    @CachePut(value = "customer-cb-cache-by-id", keyGenerator = "customerKeyGenerator")
     CustomerDetails findByCustomerId(@RequestHeader Map<String, String> headers,
                                      @PathVariable("id") Long id);
 

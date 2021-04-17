@@ -1,0 +1,10 @@
+management:
+  health:
+    db:
+      enabled: true
+  endpoint:
+    health:
+      show-details: always
+  info:
+    git:
+      mode: full

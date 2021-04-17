@@ -13,7 +13,9 @@ import io.github.resilience4j.feign.FeignDecorator;
 import io.github.resilience4j.feign.FeignDecorators;
 import io.github.resilience4j.feign.Resilience4jFeign;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -37,6 +39,9 @@ public class CustomerFeignConfiguration {
     @Value("${customer-feign.retry.maxAttempts:5}")
     private int maxAttempts;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     @Bean
     @Scope("prototype")
     public Feign.Builder customerFeignBuilder(CircuitBreakerRegistry circuitBreakerRegistry){
@@ -59,7 +64,7 @@ public class CustomerFeignConfiguration {
 
         return FeignDecorators.builder()
                 .withCircuitBreaker(circuitBreaker)
-                .withFallbackFactory(exception -> new CustomerFeignFallback(exception), FeignException.class)
+                .withFallbackFactory(exception -> new CustomerFeignFallback(exception, cacheManager), FeignException.class)
                 .build();
 
     }
